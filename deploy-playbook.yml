@@ -1,0 +1,32 @@
+---
+- name: Deploy Docker container
+  hosts: all
+  vars:
+    container_name: "pythonapp280102023"
+    image_name: "dab8106/pythonapp28012023"
+    port: "80"
+  tasks:
+    - name: Install Docker
+      become: yes
+      apt:
+        name: docker.io
+        state: present
+
+    - name: Pull image
+      become: yes
+      command: docker pull "{{ image_name }}"
+
+    - name: Stop and remove container
+      become: yes
+      command: docker stop "{{ container_name }}"
+      ignore_errors: yes
+      register: stop_result
+
+    - name: Remove container
+      become: yes
+      command: docker rm "{{ container_name }}"
+      when: stop_result.rc == 0
+
+    - name: Run container
+      become: yes
+      command: docker run -d -p "{{ port }}:80" --name "{{ container_name }}" "{{ image_name }}"
